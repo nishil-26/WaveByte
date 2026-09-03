@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaveByte — Near-Ultrasonic Acoustic Communication</title>
+<meta name="description" content="Browser-based acoustic data link between two laptops using built-in speakers and microphones. No Wi-Fi, no Bluetooth, no server.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+        <path d="M2 16 Q6 6, 10 16 T18 16 T26 16 T30 16" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="brand-text">
+        <span class="brand-name">WAVEBYTE</span>
+        <span class="brand-sub">Near-Ultrasonic Acoustic Communication</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="status-pill" id="globalStatus" data-state="ready">
+        <span class="status-dot"></span>
+        <span class="status-text">READY</span>
+      </div>
+      <button class="icon-btn" id="researchModeToggle" title="Toggle research/diagnostics mode" aria-pressed="false">
+        <span>RESEARCH MODE</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ MODE SELECTOR ============ -->
+  <nav class="mode-selector" role="tablist" aria-label="Operating mode">
+    <button class="mode-btn active" data-mode="send" role="tab" aria-selected="true">SEND</button>
+    <button class="mode-btn" data-mode="receive" role="tab" aria-selected="false">RECEIVE</button>
+    <button class="mode-btn" data-mode="chat" role="tab" aria-selected="false">TEXT CHAT</button>
+    <button class="mode-btn" data-mode="research" role="tab" aria-selected="false">RESEARCH</button>
+  </nav>
+
+  <!-- ============ MAIN GRID ============ -->
+  <main class="main-grid">
+
+    <!-- ---------- SEND PANEL ---------- -->
+    <section class="panel send-panel" data-panel="send">
+      <h2 class="panel-title">Send</h2>
+
+      <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose a file to send">
+        <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+          <path d="M12 4v10m0-10 4 4m-4-4-4 4M5 16v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dropzone-label">Drop a file here, or <span class="link-like">browse</span></p>
+        <p class="dropzone-hint">PDF, images, documents, ZIP, or any binary file</p>
+        <input type="file" id="fileInput" hidden>
+      </div>
+
+      <div class="file-summary" id="fileSummary" hidden>
+        <div class="file-summary-row">
+          <span class="file-name" id="fileName">—</span>
+          <button class="text-btn" id="clearFile">Remove</button>
+        </div>
+        <div class="file-meta" id="fileMeta">—</div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="volumeSlider">Transmit volume</label>
+        <input type="range" id="volumeSlider" min="10" max="100" value="60">
+        <div class="field-hint" id="volumeValue">60%</div>
+        <p class="warning-note">High-volume high-frequency audio may be audible or uncomfortable to some listeners. Start at a moderate level.</p>
+      </div>
+
+      <button class="primary-btn" id="transmitBtn" disabled>TRANSMIT</button>
+
+      <div class="transfer-readout" id="sendReadout" hidden>
+        <div class="progress-track"><div class="progress-fill" id="sendProgressFill"></div></div>
+        <div class="readout-grid">
+          <div><span class="readout-label">Progress</span><span class="readout-value" id="sendProgress">0%</span></div>
+          <div><span class="readout-label">Bitrate</span><span class="readout-value" id="sendBitrate">— bps</span></div>
+          <div><span class="readout-label">Packets sent</span><span class="readout-value" id="sendPacketsSent">0</span></div>
+          <div><span class="readout-label">Acknowledged</span><span class="readout-value" id="sendPacketsAcked">0</span></div>
+          <div><span class="readout-label">Retransmissions</span><span class="readout-value" id="sendRetransmissions">0</span></div>
+          <div><span class="readout-label">Est. time left</span><span class="readout-value" id="sendEta">—</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- RECEIVE PANEL ---------- -->
+    <section class="panel receive-panel" data-panel="receive" hidden>
+      <h2 class="panel-title">Receive</h2>
+
+      <div class="mic-state" id="micState">
+        <div class="mic-icon" id="micIcon">
+          <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+            <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6 11a6 6 0 0 0 12 0M12 17v4m-3 0h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="mic-label" id="micLabel">Microphone permission needed to receive</p>
+        <p class="mic-hint">WaveByte needs microphone access to receive acoustic data. Audio is processed locally in your browser and is never uploaded.</p>
+      </div>
+
+      <button class="primary-btn" id="listenBtn">LISTEN</button>
+      <button class="secondary-btn" id="stopListenBtn" hidden>STOP LISTENING</button>
+
+      <div class="receive-meta" id="receiveMeta" hidden>
+        <div class="file-summary-row">
+          <span class="file-name" id="rxFileName">—</span>
+        </div>
+        <div class="file-meta" id="rxFileMeta">—</div>
+      </div>
+
+      <div class="transfer-readout" id="rxReadout" hidden>
+        <div class="progress-track"><div class="progress-fill" id="rxProgressFill"></div></div>
+        <div class="readout-grid">
+          <div><span class="readout-label">Progress</span><span class="readout-value" id="rxProgress">0%</span></div>
+          <div><span class="readout-label">Bitrate</span><span class="readout-value" id="rxBitrate">— bps</span></div>
+          <div><span class="readout-label">Packets received</span><span class="readout-value" id="rxPacketsReceived">0</span></div>
+          <div><span class="readout-label">CRC errors</span><span class="readout-value" id="rxCrcErrors">0</span></div>
+          <div><span class="readout-label">Recovered (FEC)</span><span class="readout-value" id="rxRecovered">0</span></div>
+          <div><span class="readout-label">Retransmit requests</span><span class="readout-value" id="rxRetransmissions">0</span></div>
+        </div>
+      </div>
+
+      <div class="integrity-banner" id="integrityBanner" hidden></div>
+      <button class="primary-btn" id="downloadBtn" hidden>DOWNLOAD FILE</button>
+    </section>
+
+    <!-- ---------- TEXT CHAT PANEL ---------- -->
+    <section class="panel chat-panel" data-panel="chat" hidden>
+      <h2 class="panel-title">Text Chat</h2>
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" class="chat-input" placeholder="Type a message…" maxlength="480">
+        <button class="primary-btn small" id="chatSendBtn">SEND</button>
+      </div>
+      <button class="secondary-btn small" id="chatListenBtn">LISTEN FOR MESSAGE</button>
+    </section>
+
+    <!-- ---------- RESEARCH PANEL ---------- -->
+    <section class="panel research-panel" data-panel="research" hidden>
+      <h2 class="panel-title">Research &amp; Diagnostics</h2>
+
+      <button class="primary-btn" id="calibrateBtn">CALIBRATE CHANNEL</button>
+      <div class="calibration-result" id="calibrationResult" hidden></div>
+
+      <h3 class="section-subtitle">Experiment log</h3>
+      <p class="panel-hint">Record measured performance at known distances, then export as CSV.</p>
+      <div class="experiment-form">
+        <label>Distance (m)<input type="number" id="expDistance" min="0" step="0.5" value="1"></label>
+        <button class="secondary-btn small" id="expRecordBtn">RECORD LAST TRANSFER</button>
+      </div>
+      <table class="experiment-table" id="experimentTable">
+        <thead><tr><th>Distance</th><th>Bitrate</th><th>PER</th><th>Retries</th><th>Result</th></tr></thead>
+        <tbody id="experimentBody"></tbody>
+      </table>
+      <button class="secondary-btn small" id="exportCsvBtn">EXPORT CSV</button>
+    </section>
+
+    <!-- ---------- RIGHT: DIAGNOSTICS ---------- -->
+    <aside class="panel diagnostics-panel">
+      <h2 class="panel-title">Diagnostics</h2>
+      <div class="dashboard-grid">
+        <div class="dash-item"><span class="dash-label">Carrier band</span><span class="dash-value">18–20 kHz</span></div>
+        <div class="dash-item"><span class="dash-label">Sample rate</span><span class="dash-value" id="dashSampleRate">—</span></div>
+        <div class="dash-item"><span class="dash-label">Modulation</span><span class="dash-value">8-FSK</span></div>
+        <div class="dash-item"><span class="dash-label">FEC</span><span class="dash-value">Hamming(7,4)</span></div>
+        <div class="dash-item"><span class="dash-label">Freq. offset</span><span class="dash-value" id="dashOffset">— Hz</span></div>
+        <div class="dash-item"><span class="dash-label">Confidence</span><span class="dash-value" id="dashConfidence">—</span></div>
+      </div>
+
+      <h3 class="section-subtitle">Live status</h3>
+      <div class="live-status" id="liveStatus">IDLE</div>
+
+      <h3 class="section-subtitle">Protocol log</h3>
+      <div class="protocol-log" id="protocolLog"></div>
+    </aside>
+
+  </main>
+
+  <!-- ============ BOTTOM: SPECTRUM ============ -->
+  <footer class="spectrum-bar">
+    <div class="spectrum-header">
+      <span class="spectrum-title">Live Spectrum · 15–24 kHz</span>
+      <span class="spectrum-note">Highlighted band = active WaveByte channel (18–20 kHz)</span>
+    </div>
+    <canvas id="spectrumCanvas" width="1200" height="140" aria-label="Live audio spectrum"></canvas>
+  </footer>
+
+</div>
+
+<!-- Demo hidden text file for quick testing -->
+<a id="downloadAnchor" hidden></a>
+
+<script src="js/crc32.js"></script>
+<script src="js/sha256.js"></script>
+<script src="js/fec.js"></script>
+<script src="js/packet.js"></script>
+<script src="js/goertzel.js"></script>
+<script src="js/modem.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/spectrum.js"></script>
+<script src="js/transmitter.js"></script>
+<script src="js/receiver.js"></script>
+<script src="js/file-transfer.js"></script>
+<script src="js/calibration.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
