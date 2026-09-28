@@ -1,0 +1,25 @@
+{
+  "name": "wavebyte",
+  "version": "2.0.0",
+  "description": "Near-ultrasonic acoustic data link between two laptops, over their built-in speakers and microphones. No Wi-Fi, no Bluetooth, no internet, no server -- terminal CLI edition.",
+  "bin": {
+    "wavebyte": "bin/wavebyte.js"
+  },
+  "main": "lib/protocol.js",
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node build/make-core-bundle.js && node build/make-protocol-bundle.js",
+    "test": "node test/roundtrip.test.js"
+  },
+  "os": ["darwin", "linux", "win32"],
+  "keywords": ["acoustic", "modem", "offline", "airgap", "ultrasonic", "file-transfer", "cli"],
+  "license": "MIT"
+}
