@@ -8,7 +8,13 @@
 # laptops ever again; only sound.
 set -e
 
-REPO="github:nishil-26/WaveByte"
+# Installed from a tarball URL rather than npm's `github:owner/repo`
+# shorthand -- that shorthand goes through npm's git-clone install path,
+# which (confirmed by testing) can leave a dangling symlink into npm's own
+# temp cache instead of actually copying the package, breaking `wavebyte`
+# right after a successful-looking install. A tarball URL doesn't have that
+# problem.
+REPO="https://github.com/nishil-26/WaveByte/archive/refs/heads/main.tar.gz"
 
 echo "==> WaveByte CLI installer"
 
