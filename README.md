@@ -1,16 +1,9 @@
 # WaveByte
 
 Send files and text between two laptops using **sound** — their built-in
-speakers and microphones, near-ultrasonic (18–19.8 kHz), with FEC, CRC32,
-ARQ retransmission, and end-to-end SHA-256 verification. No Wi-Fi, no
+speakers and microphones, near-ultrasonic (18–19.8 kHz). No Wi-Fi, no
 Bluetooth, no LAN, no internet, no pairing, no server.
 
-This is the terminal edition. There's no web page and nothing to host —
-a browser build needs a page *loaded* over the internet before it can even
-start, which defeats the point of an offline link. This CLI needs the
-internet exactly once, to install itself. After that, nothing either
-laptop does touches a network, Wi-Fi, Bluetooth, or the internet — only
-sound.
 
 ## Install
 
@@ -19,9 +12,7 @@ You need three things before `wavebyte` itself can go in: **Node.js**,
 below), and **sox** (handles the actual speaker/mic access, since Node has
 no built-in audio I/O). macOS and Linux get all three from one line.
 Windows currently needs a few manual steps first — spelled out in full
-below, because every shortcut we tried for these first had a real,
-reproducible failure mode worth knowing about up front rather than hitting
-blind.
+below:
 
 ### macOS / Linux
 
@@ -58,12 +49,7 @@ requiring scripts downloaded from the internet to be signed. Confirm with
 `npm -v`.
 
 **3. Install sox manually.**
-Chocolatey's `sox.portable` package is currently broken upstream (flagged
-"Possibly broken" by Chocolatey itself — its install script calls a
-function Chocolatey no longer ships) — don't bother with `choco install`
-for this. A scripted download from SourceForge doesn't work reliably
-either, since its file links go through a page that only a real browser
-can click through. So, by hand, once:
+Download from SourceForge:
    1. Open [sourceforge.net/projects/sox/files/sox/14.4.2](https://sourceforge.net/projects/sox/files/sox/14.4.2/)
       in your browser and download `sox-14.4.2-win32.zip`.
    2. Right-click the downloaded zip → **Extract All**.
@@ -139,9 +125,6 @@ here:
   current version.
 - **`npm : running scripts is disabled on this system`.**
   See Windows step 2 above (`Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`).
-- **`choco install sox.portable` fails with `Write-ChocolateyFailure` not recognized.**
-  That package is broken upstream, not a local problem. See Windows step 3
-  above for the manual install instead.
 - **`sox: Sorry, there is no default audio device configured` (Windows only).**
   A known, long-standing bug in this SoX build's Windows device
   auto-detection (unmaintained upstream since 2015) — not specific to one
@@ -153,17 +136,7 @@ here:
   wavebyte calibrate
   ```
   and try device index `1`, `2`, etc. if `0` doesn't work.
-- **`npm install -g` reports success, but `wavebyte` then says `Cannot find module ...bin\wavebyte.js`.**
-  `npm install -g github:owner/repo` can leave a broken symlink into npm's
-  own temp cache instead of actually copying the package — confirmed by
-  reproducing it directly. Fixed: installing from a tarball URL instead
-  (`.../archive/refs/heads/main.tar.gz`), which both installer scripts and
-  the README above already use.
-- **"File not found" for a file you can see right there.**
-  If you pasted a path copied via Explorer's "Copy as path", it comes
-  wrapped in literal quote marks, which broke path resolution in earlier
-  versions. Fixed: quotes are now stripped automatically from any path
-  wavebyte accepts. Update to the current version if you still see this.
+
 
 ## Project layout
 
