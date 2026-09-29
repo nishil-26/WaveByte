@@ -138,23 +138,6 @@ here:
   and try device index `1`, `2`, etc. if `0` doesn't work.
 
 
-## Project layout
-
-```
-bin/wavebyte.js         CLI entry point (commands + interactive menu)
-lib/core-src/            modem/packet/FEC/CRC/SHA-256 source (edit these)
-lib/protocol-src/         transmitter/receiver/file-transfer/calibration source (edit these)
-lib/core.js               generated from core-src/ — npm run build
-lib/protocol.js           generated from protocol-src/ — npm run build
-lib/audio-node.js         sox-backed mic/speaker I/O (the only OS-specific part)
-lib/tui.js                terminal output helpers, zero dependencies
-test/roundtrip.test.js    simulated-channel correctness test, run via `npm test`
-install/                  the two installer scripts
-```
-
-If you edit anything in `lib/core-src/` or `lib/protocol-src/`, run
-`npm run build` to regenerate `lib/core.js` / `lib/protocol.js` before
-testing — those two are the actual files required at runtime.
 
 ## License
 
