@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/nishil-26/WaveByte/main/install/ins
 
 **Windows (PowerShell)**
 ```
-irm https://raw.githubusercontent.com/nishil-26/WaveByte/main/install/install.ps1 | iex
+npm install -g https://github.com/nishil-26/WaveByte/archive/refs/heads/main.tar.gz
 ```
 
 > Like any `curl | bash` installer, feel free to open the script first and
