@@ -45,6 +45,28 @@ function volumeFromOpt(opts) {
   return Math.max(0.1, Math.min(1, opts.volume / 100));
 }
 
+/**
+ * Strips one layer of matching leading/trailing quotes from a path.
+ *
+ * Windows Explorer's "Copy as path" (and drag-and-drop into some terminals)
+ * wraps the path in literal double quotes, e.g. "C:\Users\me\file.pdf". A
+ * plain rl.question() prompt has no shell to strip those for you the way
+ * argv does, so without this, path.resolve() sees a string starting with a
+ * literal `"` character, doesn't recognize it as absolute, and silently
+ * prepends the current directory to it -- producing a confusing "file not
+ * found" for a path that plainly exists. Applied to every path this CLI
+ * accepts (interactive prompts and argv both), since either could carry
+ * quotes depending on how the person pasted it in.
+ */
+function stripQuotes(s) {
+  if (!s) return s;
+  const t = s.trim();
+  if (t.length >= 2 && ((t[0] === '"' && t[t.length - 1] === '"') || (t[0] === "'" && t[t.length - 1] === "'"))) {
+    return t.slice(1, -1);
+  }
+  return t;
+}
+
 async function ensureMic() {
   if (!WBAudio.hasMicPermission()) {
     tui.log('Starting microphone capture (via sox)...');
@@ -73,7 +95,7 @@ function makeCallbacks(direction, totals) {
 // ---------------------------------------------------------------- send ----
 async function cmdSend(filePath, opts) {
   if (!filePath) { tui.log('Usage: wavebyte send <file> [--volume 0-100]', 'error'); process.exit(1); }
-  const resolved = path.resolve(filePath);
+  const resolved = path.resolve(stripQuotes(filePath));
   if (!fs.existsSync(resolved)) { tui.log(`File not found: ${resolved}`, 'error'); process.exit(1); }
   const dataBytes = new Uint8Array(fs.readFileSync(resolved));
   const isText = path.extname(resolved).toLowerCase() === '.txt';
@@ -100,7 +122,7 @@ async function cmdSend(filePath, opts) {
 
 // -------------------------------------------------------------- receive ----
 async function cmdReceive(opts) {
-  const outDir = opts.out ? path.resolve(opts.out) : process.cwd();
+  const outDir = opts.out ? path.resolve(stripQuotes(opts.out)) : process.cwd();
   const volume = volumeFromOpt(opts);
   tui.banner('listening for an incoming transfer — leave this running on the receiving laptop');
   await ensureMic();
