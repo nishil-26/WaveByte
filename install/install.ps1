@@ -13,7 +13,13 @@
 # instead of just stopping the script, before you'd ever see why.
 
 function Install-WaveByte {
-    $Repo = "github:nishil-26/WaveByte"
+    # Installed from a tarball URL rather than npm's `github:owner/repo`
+    # shorthand -- that shorthand goes through npm's git-clone install path,
+    # which (confirmed by testing) can leave a dangling symlink into npm's
+    # own temp cache instead of actually copying the package, breaking
+    # `wavebyte` right after a successful-looking install. A tarball URL
+    # doesn't have that problem.
+    $Repo = "https://github.com/nishil-26/WaveByte/archive/refs/heads/main.tar.gz"
 
     Write-Host "==> WaveByte CLI installer"
 
@@ -23,22 +29,25 @@ function Install-WaveByte {
     }
 
     if (-not (Get-Command sox -ErrorAction SilentlyContinue)) {
-        Write-Host "==> Installing sox (used for microphone/speaker access)..."
-        if (Get-Command choco -ErrorAction SilentlyContinue) {
-            choco install sox.portable -y
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "choco install sox.portable failed (exit code $LASTEXITCODE). See the output above for why." -ForegroundColor Red
-                return
-            }
-        } else {
-            Write-Host "Chocolatey wasn't found, so sox can't be installed automatically." -ForegroundColor Red
-            Write-Host "Either install Chocolatey from https://chocolatey.org/install and re-run this script," -ForegroundColor Red
-            Write-Host "or download SoX manually from https://sourceforge.net/projects/sox/files/sox/ and add its folder to your PATH yourself." -ForegroundColor Red
-            return
-        }
-    } else {
-        Write-Host "==> sox already installed."
+        # Deliberately NOT automated: the Chocolatey "sox.portable" package is
+        # flagged "Possibly broken" upstream (confirmed -- its install script
+        # calls a helper function Chocolatey itself no longer ships), and a
+        # scripted SourceForge download also isn't reliable (its file links
+        # go through an HTML/JS interstitial page that PowerShell can't
+        # click through, so Invoke-WebRequest ends up saving that HTML page
+        # instead of the real file). Both were tried and failed in practice.
+        # The manual path below is the one confirmed to actually work.
+        Write-Host "sox wasn't found. Install it manually (2 minutes, one-time):" -ForegroundColor Yellow
+        Write-Host "  1. Open https://sourceforge.net/projects/sox/files/sox/14.4.2/ in your browser" -ForegroundColor Yellow
+        Write-Host "     and download sox-14.4.2-win32.zip." -ForegroundColor Yellow
+        Write-Host "  2. Right-click the downloaded zip -> Extract All." -ForegroundColor Yellow
+        Write-Host "  3. Find the folder inside it containing sox.exe." -ForegroundColor Yellow
+        Write-Host "  4. Add that folder to your PATH: Win+R -> sysdm.cpl -> Advanced ->" -ForegroundColor Yellow
+        Write-Host "     Environment Variables -> edit your User 'Path' -> add that folder." -ForegroundColor Yellow
+        Write-Host "  5. Open a NEW PowerShell window and re-run this installer." -ForegroundColor Yellow
+        return
     }
+    Write-Host "==> sox already installed."
 
     Write-Host "==> Installing the wavebyte command..."
     npm install -g $Repo
